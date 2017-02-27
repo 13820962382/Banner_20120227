@@ -1,5 +1,7 @@
 package com.fuicuiedu.xc.banner_20120227;
 
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +13,9 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,7 +39,8 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private int oldPosition = 0 ;//记录上一个点的位置
-
+    private ScheduledExecutorService scheduledExecutorService;//线程池，用来定时轮播
+    private int currentItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
                 dots.get(oldPosition).setBackgroundResource(R.drawable.dot_normal);
 
                 oldPosition = position;//再次改变时，当前的position即为老的position
+
+                currentItem = position;//用于当用户手动滑动轮播图处理
             }
 
             @Override
@@ -90,13 +98,45 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-
-
         //自动轮播
-
-
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //开启一个单独的后台线程
+        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        //给线程添加一个定时的调度任务
+//        Runnable command,
+//        long initialDelay,
+//        long delay,
+//        TimeUnit unit
+        //参数说明：延迟initialDelay时间后，开始执行command。
+        //并且按照delay时间周期性重复调用
+        //TimeUnit用来定义时间单位
+        scheduledExecutorService.scheduleWithFixedDelay(
+                new ViewPagerTask(),2,2,TimeUnit.SECONDS
+        );
+    }
+
+    private class ViewPagerTask implements Runnable {
+        @Override
+        public void run() {
+            //确定ViewPager跳转到哪个页面
+            //使用取余的方式来确定
+            currentItem = (currentItem + 1) % imageIds.length;
+            mhandler.sendEmptyMessage(0);//只是为了调用UI更新，发一个空消息
+        }
+    }
+
+    private Handler mhandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            //更新viewpager当前显示的pager
+            mViewPager.setCurrentItem(currentItem);
+        }
+    };
 
     private class ViewPagerAdapter extends PagerAdapter {
         //获取当前窗体界面数量
