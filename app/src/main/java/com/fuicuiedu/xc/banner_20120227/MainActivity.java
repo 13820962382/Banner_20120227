@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.ee
     };
 
+    private int oldPosition = 0 ;//记录上一个点的位置
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         dots.add(findViewById(R.id.dot_2));//单行复制 ctrl + d
         dots.add(findViewById(R.id.dot_3));//单行复制 ctrl + d
         dots.add(findViewById(R.id.dot_4));//单行复制 ctrl + d
+        dots.get(0).setBackgroundResource(R.drawable.dot_focesed);//刚进来默认显示第一张图
 
         title = (TextView) findViewById(R.id.tv);//显示图片标题
         title.setText(titles[0]);
@@ -63,7 +66,33 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new ViewPagerAdapter();
         mViewPager.setAdapter(mAdapter);
 
+
+
         //关于小点点，图片标题的改变
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                //标题的改变
+                title.setText(titles[position]);
+                //小点点的改变
+                dots.get(position).setBackgroundResource(R.drawable.dot_focesed);
+                dots.get(oldPosition).setBackgroundResource(R.drawable.dot_normal);
+
+                oldPosition = position;//再次改变时，当前的position即为老的position
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+            }
+        });
+
+
+
+
         //自动轮播
 
 
